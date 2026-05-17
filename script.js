@@ -1,3 +1,7 @@
+function toggleMenu(){
+  document.getElementById("menu").classList.toggle("show");
+}
+
 function scrollToSection(){
 
   document.getElementById("about").scrollIntoView({
