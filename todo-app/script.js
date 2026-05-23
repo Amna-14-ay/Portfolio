@@ -2,44 +2,84 @@ const addBtn = document.getElementById("addBtn");
 const taskInput = document.getElementById("taskInput");
 const taskList = document.getElementById("taskList");
 
-addBtn.addEventListener("click", function () {
+let tasks = JSON.parse(localStorage.getItem("tasks")) || [];
 
-  const taskText = taskInput.value.trim();
+/* SAVE */
+function saveTasks() {
+  localStorage.setItem("tasks", JSON.stringify(tasks));
+}
 
-  if (taskText === "") {
-    alert("Please enter a task");
-    return;
-  }
+/* RENDER */
+function renderTasks() {
+  taskList.innerHTML = "";
 
-  // Create list item
-  const li = document.createElement("li");
+  tasks.forEach((task, index) => {
+    const li = document.createElement("li");
+    li.setAttribute("draggable", true);
 
-  // Create task text
-  const span = document.createElement("span");
-  span.textContent = taskText;
+    const span = document.createElement("span");
+    span.textContent = task.text;
 
-  // Complete task on click
-  span.addEventListener("click", function () {
-    span.classList.toggle("completed");
+    if (task.completed) {
+      span.classList.add("completed");
+    }
+
+    // COMPLETE
+    span.addEventListener("click", () => {
+      tasks[index].completed = !tasks[index].completed;
+      saveTasks();
+      renderTasks();
+    });
+
+    // EDIT
+    span.addEventListener("dblclick", () => {
+      const newText = prompt("Edit task:", task.text);
+      if (newText) {
+        tasks[index].text = newText;
+        saveTasks();
+        renderTasks();
+      }
+    });
+
+    // DELETE WITH ANIMATION
+    const deleteBtn = document.createElement("button");
+    deleteBtn.textContent = "Delete";
+    deleteBtn.classList.add("deleteBtn");
+
+    deleteBtn.addEventListener("click", () => {
+      li.style.animation = "fadeOut 0.3s ease";
+
+      setTimeout(() => {
+        tasks.splice(index, 1);
+        saveTasks();
+        renderTasks();
+      }, 300);
+    });
+
+    li.appendChild(span);
+    li.appendChild(deleteBtn);
+
+    taskList.appendChild(li);
   });
+}
 
-  // Create delete button
-  const deleteBtn = document.createElement("button");
-  deleteBtn.textContent = "Delete";
-  deleteBtn.classList.add("deleteBtn");
+/* ADD TASK */
+addBtn.addEventListener("click", () => {
+  const text = taskInput.value.trim();
+  if (!text) return;
 
-  // Delete task
-  deleteBtn.addEventListener("click", function () {
-    li.remove();
-  });
+  tasks.push({ text, completed: false });
 
-  // Add elements to li
-  li.appendChild(span);
-  li.appendChild(deleteBtn);
+  saveTasks();
+  renderTasks();
 
-  // Add li to ul
-  taskList.appendChild(li);
-
-  // Clear input
   taskInput.value = "";
 });
+
+/* DARK MODE */
+document.getElementById("darkBtn").addEventListener("click", () => {
+  document.body.classList.toggle("dark");
+});
+
+/* INIT */
+renderTasks();
